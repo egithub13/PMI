@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMP 49 Processes — Ramdayal Style Interactive Map</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    background: #0b0e17;
+    color: #e0e0e0;
+    font-family: 'Space Grotesk', -apple-system, sans-serif;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* Top Banner */
+  .banner {
+    background: linear-gradient(135deg, #0f1628 0%, #162040 50%, #0f1628 100%);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 20px 24px;
+    text-align: center;
+  }
+  .banner h1 {
+    font-size: 26px; font-weight: 800; margin-bottom: 4px;
+    background: linear-gradient(135deg, #ffd700, #ff8c00, #ff4500);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .banner .subtitle { font-size: 13px; color: rgba(255,255,255,0.45); }
+  .banner .subtitle em { color: #ffd700; font-style: normal; }
+
+  /* Mindset Banner */
+  .mindset-bar {
+    background: linear-gradient(90deg, rgba(255,215,0,0.08), rgba(255,140,0,0.08));
+    border-bottom: 1px solid rgba(255,215,0,0.15);
+    padding: 10px 24px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    font-size: 12px;
+  }
+  .mindset-bar .label {
+    background: #ffd700; color: #000; padding: 3px 8px; border-radius: 4px;
+    font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  .mindset-bar .tip { color: rgba(255,255,255,0.7); line-height: 1.4; }
+
+  /* Tabs */
+  .tabs {
+    display: flex; justify-content: center; gap: 4px; padding: 16px 24px;
+    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-wrap: wrap;
+  }
+  .tab {
+    padding: 8px 18px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);
+    background: transparent; color: rgba(255,255,255,0.45); cursor: pointer;
+    font-size: 13px; font-weight: 600; font-family: 'Space Grotesk', sans-serif;
+    transition: all 0.2s;
+  }
+  .tab:hover { background: rgba(255,255,255,0.04); }
+  .tab.active { border-color: #ffd700; background: rgba(255,215,0,0.08); color: #ffd700; }
+  .tab small { display: block; font-size: 10px; opacity: 0.5; font-weight: 400; }
+
+  /* Domain filter */
+  .domain-filter {
+    display: flex; justify-content: center; gap: 6px; padding: 10px 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.04); flex-wrap: wrap;
+  }
+  .domain-btn {
+    padding: 5px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
+    background: transparent; color: rgba(255,255,255,0.5); cursor: pointer;
+    font-size: 11px; font-weight: 600; font-family: 'Space Grotesk', sans-serif;
+    transition: all 0.2s;
+  }
+  .domain-btn.active { color: #fff; }
+  .domain-btn[data-d="people"].active { border-color: #e94560; background: rgba(233,69,96,0.15); color: #ff6b81; }
+  .domain-btn[data-d="process"].active { border-color: #4a90d9; background: rgba(74,144,217,0.15); color: #6bb3ff; }
+  .domain-btn[data-d="business"].active { border-color: #2ecc71; background: rgba(46,204,113,0.15); color: #4ade80; }
+  .domain-btn[data-d="all"].active { border-color: #ffd700; background: rgba(255,215,0,0.1); color: #ffd700; }
+
+  /* Layout */
+  .content { padding: 16px; }
+  .main-grid { display: grid; grid-template-columns: 1fr 380px; gap: 16px; align-items: start; }
+  .panel {
+    border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.02); padding: 16px; overflow: auto;
+  }
+  .side-panel { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto; }
+
+  /* Matrix */
+  .matrix { display: grid; grid-template-columns: 120px repeat(5, 1fr); gap: 2px; min-width: 860px; }
+  .matrix-hdr {
+    padding: 10px 6px; text-align: center; font-weight: 700; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    border-bottom: 2px solid;
+  }
+  .ka-label {
+    padding: 8px 6px; font-weight: 600; font-size: 11px;
+    display: flex; align-items: center; cursor: pointer;
+    border-left: 3px solid; transition: opacity 0.2s;
+  }
+  .matrix-cell {
+    padding: 4px; display: flex; flex-direction: column; gap: 3px;
+    background: rgba(255,255,255,0.015); border-radius: 4px; min-height: 36px;
+    transition: opacity 0.2s;
+  }
+
+  /* Process Card */
+  .pcard {
+    padding: 5px 7px; border-radius: 6px; border: 2px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.03); cursor: pointer; transition: all 0.2s;
+    position: relative;
+  }
+  .pcard:hover { transform: scale(1.03); z-index: 2; }
+  .pcard.selected { border-width: 2px; }
+  .pcard.dimmed { opacity: 0.15; }
+  .pcard .katag {
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 1px; display: flex; align-items: center; gap: 4px;
+  }
+  .pcard .pname { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.8); line-height: 1.25; }
+  .pcard.selected .pname { color: #fff; }
+  .approach-dots { display: flex; gap: 2px; }
+  .approach-dots .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+  .dot-pred { background: #4a90d9; }
+  .dot-agile { background: #2ecc71; }
+  .dot-hybrid { background: #f39c12; }
+  .badge-io {
+    position: absolute; width: 14px; height: 14px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 6px; font-weight: 700; color: #000;
+  }
+  .badge-in { top: -5px; right: -5px; background: #4ade80; }
+  .badge-out { bottom: -5px; right: -5px; background: #60a5fa; }
+
+  /* Detail Panel */
+  .detail-empty { padding: 30px 16px; text-align: center; color: rgba(255,255,255,0.3); font-size: 13px; }
+  .detail-hdr {
+    padding: 14px; border-radius: 10px; border: 2px solid; margin-bottom: 12px;
+    position: relative; overflow: hidden;
+  }
+  .detail-hdr::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    opacity: 0.06; pointer-events: none;
+  }
+  .detail-hdr .proc-ka { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+  .detail-hdr .proc-name { font-size: 17px; font-weight: 700; color: #fff; margin-top: 3px; }
+  .detail-hdr .proc-meta {
+    display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap;
+  }
+  .meta-tag {
+    padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600;
+    border: 1px solid;
+  }
+  .meta-domain-people { border-color: rgba(233,69,96,0.4); color: #ff6b81; background: rgba(233,69,96,0.1); }
+  .meta-domain-process { border-color: rgba(74,144,217,0.4); color: #6bb3ff; background: rgba(74,144,217,0.1); }
+  .meta-domain-business { border-color: rgba(46,204,113,0.4); color: #4ade80; background: rgba(46,204,113,0.1); }
+  .meta-pred { border-color: rgba(74,144,217,0.4); color: #4a90d9; background: rgba(74,144,217,0.1); }
+  .meta-agile { border-color: rgba(46,204,113,0.4); color: #2ecc71; background: rgba(46,204,113,0.1); }
+  .meta-hybrid { border-color: rgba(243,156,18,0.4); color: #f39c12; background: rgba(243,156,18,0.1); }
+
+  /* Mindset Card */
+  .mindset-card {
+    padding: 12px; border-radius: 8px; margin-bottom: 12px;
+    background: linear-gradient(135deg, rgba(255,215,0,0.06), rgba(255,140,0,0.03));
+    border: 1px solid rgba(255,215,0,0.15);
+  }
+  .mindset-card .mc-title {
+    font-size: 10px; font-weight: 700; color: #ffd700;
+    text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px;
+  }
+  .mindset-card .mc-text { font-size: 12px; color: rgba(255,255,255,0.75); line-height: 1.5; }
+
+  /* I/O Grid */
+  .io-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .io-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; padding: 0 2px; }
+  .io-item {
+    padding: 7px 9px; border-radius: 6px; margin-bottom: 3px; cursor: pointer;
+    transition: filter 0.15s;
+  }
+  .io-item:hover { filter: brightness(1.4); }
+  .io-in { border: 1px solid rgba(74,222,128,0.2); background: rgba(74,222,128,0.05); }
+  .io-out { border: 1px solid rgba(96,165,250,0.2); background: rgba(96,165,250,0.05); }
+  .io-item .art { font-size: 10px; font-weight: 600; }
+  .io-in .art { color: #4ade80; }
+  .io-out .art { color: #60a5fa; }
+  .io-item .src { font-size: 9px; color: rgba(255,255,255,0.45); margin-top: 1px; }
+  .io-empty { font-size: 11px; color: rgba(255,255,255,0.25); font-style: italic; padding: 4px; }
+  .io-ext { border: 1px dashed rgba(255,215,0,0.25); background: rgba(255,215,0,0.04); }
+  .io-ext .art { color: #ffd700; }
+  .io-ext .src { font-size: 9px; color: rgba(255,215,0,0.45); }
+  .ext-divider { font-size: 9px; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 0.5px; margin: 6px 0 4px 2px; }
+
+  /* Hub Section */
+  .hub-sec {
+    margin-top: 14px; padding: 14px; border-radius: 10px;
+    background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+  }
+  .hub-title { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+  .hub-row {
+    display: flex; align-items: center; gap: 8px; padding: 5px 6px;
+    border-radius: 5px; cursor: pointer; margin-bottom: 2px; transition: background 0.15s;
+  }
+  .hub-row:hover { background: rgba(255,255,255,0.05); }
+  .hub-row.active { background: rgba(255,255,255,0.07); }
+  .hub-rank { font-size: 10px; color: rgba(255,255,255,0.25); width: 18px; }
+  .hub-name { flex: 1; font-size: 11px; font-weight: 500; }
+  .hub-in { font-size: 9px; color: #4ade80; }
+  .hub-out { font-size: 9px; color: #60a5fa; }
+
+  /* Flow View columns */
+  .flow-grid { display: flex; gap: 10px; overflow-x: auto; min-width: 860px; }
+  .flow-col { flex: 1 1 0; min-width: 160px; }
+  .flow-hdr {
+    padding: 8px; text-align: center; font-weight: 700; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;
+    border-bottom: 2px solid;
+  }
+  .flow-hdr small { font-size: 9px; opacity: 0.5; display: block; margin-top: 2px; }
+  .flow-items { display: flex; flex-direction: column; gap: 5px; }
+
+  /* Study Mode */
+  .study-wrap { max-width: 720px; margin: 0 auto; }
+  .study-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .sbtn {
+    padding: 7px 14px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.04); color: #fff; cursor: pointer; font-family: inherit;
+    font-size: 13px;
+  }
+  .sbtn:disabled { opacity: 0.25; cursor: default; }
+  .study-counter { color: rgba(255,255,255,0.4); font-size: 12px; }
+  .study-card {
+    padding: 28px; border-radius: 12px; border: 2px solid; text-align: center; margin-bottom: 14px;
+  }
+  .study-card .katag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .study-card .pname { font-size: 22px; font-weight: 700; color: #fff; }
+  .study-card .pmeta { margin-top: 8px; display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+  .reveal-btn {
+    width: 100%; padding: 11px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15);
+    color: #fff; cursor: pointer; font-size: 13px; font-weight: 600; font-family: inherit;
+    margin-bottom: 14px; transition: all 0.2s;
+  }
+  .reveal-btn.hidden { background: linear-gradient(135deg, #ffd700, #ff8c00); color: #000; border-color: transparent; }
+  .reveal-btn.shown { background: rgba(255,255,255,0.06); }
+
+  /* Legend */
+  .legend { display: flex; justify-content: center; gap: 16px; padding: 16px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .legend-text { font-size: 10px; color: rgba(255,255,255,0.4); }
+
+  /* Tips */
+  .tips-section {
+    max-width: 820px; margin: 16px auto; padding: 16px 20px; border-radius: 10px;
+    background: rgba(255,215,0,0.04); border: 1px solid rgba(255,215,0,0.12);
+  }
+  .tips-title { font-size: 12px; font-weight: 700; color: #ffd700; margin-bottom: 8px; }
+  .tips-body { font-size: 11px; color: rgba(255,255,255,0.6); line-height: 1.7; }
+  .tips-body strong { color: rgba(255,255,255,0.85); }
+
+  @media (max-width: 1100px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .side-panel { position: static; max-height: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="banner">
+  <h1>PMP 49 Processes — Interactive Study Map</h1>
+  <div class="subtitle">Aligned with <em>Andrew Ramdayal's PMP Exam Prep Simplified</em> · Predictive + Agile + Hybrid · PMBOK 7 & Process Groups Practice Guide</div>
+</div>
+
+<div class="mindset-bar" id="mindset-bar">
+  <span class="label mono">🧠 RAMDAYAL MINDSET</span>
+  <span class="tip">Think like a servant leader PM. Ask: "What is the BEST and FIRST thing to do?" Follow the process, don't skip steps, and never act alone. Click any process for its specific mindset tip.</span>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchView('matrix')" id="tab-matrix">Matrix View<small>KA × Process Group</small></button>
+  <button class="tab" onclick="switchView('flow')" id="tab-flow">Flow View<small>By Process Group</small></button>
+  <button class="tab" onclick="switchView('study')" id="tab-study">Study Mode<small>Flashcards + Mindset</small></button>
+</div>
+
+<div class="domain-filter">
+  <button class="domain-btn active" data-d="all" onclick="filterDomain('all')">All Domains</button>
+  <button class="domain-btn" data-d="people" onclick="filterDomain('people')">👤 People</button>
+  <button class="domain-btn" data-d="process" onclick="filterDomain('process')">⚙️ Process</button>
+  <button class="domain-btn" data-d="business" onclick="filterDomain('business')">💼 Business Environment</button>
+  <span style="font-size:10px;color:rgba(255,255,255,0.25);margin-left:8px">|</span>
+  <button class="domain-btn" data-d="pred" onclick="filterDomain('pred')" style="margin-left:4px">🔵 Predictive</button>
+  <button class="domain-btn" data-d="agile" onclick="filterDomain('agile')">🟢 Agile</button>
+  <button class="domain-btn" data-d="hybrid" onclick="filterDomain('hybrid')">🟡 Hybrid</button>
+</div>
+
+<div class="content">
+  <div id="view-matrix" class="main-grid">
+    <div class="panel" id="matrix-panel"></div>
+    <div class="panel side-panel" id="side-matrix"></div>
+  </div>
+  <div id="view-flow" class="main-grid" style="display:none;">
+    <div class="panel" id="flow-panel"></div>
+    <div class="panel side-panel" id="side-flow"></div>
+  </div>
+  <div id="view-study" style="display:none;">
+    <div class="study-wrap" id="study-panel"></div>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div><span class="legend-text">Input (feeds into selected)</span></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#60a5fa"></div><span class="legend-text">Output (receives from selected)</span></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ffd700;border:1px dashed rgba(255,215,0,0.6)"></div><span class="legend-text">External / Standalone I/O</span></div>
+  <div class="legend-item"><div class="legend-dot dot-pred"></div><span class="legend-text">Predictive</span></div>
+  <div class="legend-item"><div class="legend-dot dot-agile"></div><span class="legend-text">Agile</span></div>
+  <div class="legend-item"><div class="legend-dot dot-hybrid"></div><span class="legend-text">Hybrid</span></div>
+</div>
+
+<div class="tips-section">
+  <div class="tips-title mono">RAMDAYAL'S KEY STUDY STRATEGIES FOR THE 49 PROCESSES</div>
+  <div class="tips-body">
+    <strong>1. Don't Memorize ITTOs Blindly:</strong> Understand WHY an output from one process becomes an input to another. The logic tells the story of a project lifecycle.<br>
+    <strong>2. The PM Plan is King:</strong> "Develop PM Plan" collects subsidiary plans from every KA. It's the #1 hub — everything flows through it.<br>
+    <strong>3. Master the Change Control Loop:</strong> Work → Change Requests → Integrated Change Control → Approved Changes → back to Direct & Manage. The exam LOVES this cycle.<br>
+    <strong>4. Predictive vs Agile Mindset:</strong> In predictive, follow the plan and use formal change control. In agile, embrace change, empower the team, iterate. In hybrid, blend both — the exam tests whether you know WHEN to apply each.<br>
+    <strong>5. Servant Leadership Always:</strong> The PM removes obstacles, supports the team, facilitates (doesn't dictate), and communicates proactively. This mindset answers 80% of situational questions.<br>
+    <strong>6. Three Domains Matter:</strong> People (~42%), Process (~50%), Business Environment (~8%). Most processes map across domains — know which hat you're wearing.
+  </div>
+</div>
+
+<script>
+// ======== DATA ========
+const PG = ["Initiating","Planning","Executing","Monitoring & Controlling","Closing"];
+const PGC = {
+  "Initiating":{accent:"#e94560",light:"#ff6b81"},
+  "Planning":{accent:"#1e5090",light:"#4a90d9"},
+  "Executing":{accent:"#16697a",light:"#3dc1d3"},
+  "Monitoring & Controlling":{accent:"#b35600",light:"#ffa235"},
+  "Closing":{accent:"#533483",light:"#9b59b6"}
+};
+const KA = ["Integration","Scope","Schedule","Cost","Quality","Resource","Communications","Risk","Procurement","Stakeholder"];
+const KAC = {
+  Integration:"#e94560",Scope:"#4a90d9",Schedule:"#3dc1d3",Cost:"#2ecc71",Quality:"#f39c12",
+  Resource:"#9b59b6",Communications:"#1abc9c",Risk:"#e67e22",Procurement:"#e74c3c",Stakeholder:"#6c5ce7"
+};
+
+// domains: people, process, business  |  approach: pred, agile, hybrid
+const P = [
+  {id:1,name:"Develop Project Charter",ka:"Integration",pg:"Initiating",short:"Dev Charter",
+   domains:["process","business"],approach:["pred","agile","hybrid"],
+   mindset:"First step in ANY project. Get formal authorization. Without the charter, the project doesn't exist. The sponsor owns the charter — not the PM."},
+  {id:2,name:"Develop Project Management Plan",ka:"Integration",pg:"Planning",short:"Dev PM Plan",
+   domains:["process"],approach:["pred","hybrid"],
+   mindset:"This is the master plan — all subsidiary plans roll up here. In predictive, this is comprehensive upfront. In hybrid, plan what you know and iterate the rest. The PM leads the effort, the team contributes."},
+  {id:3,name:"Direct & Manage Project Work",ka:"Integration",pg:"Executing",short:"Direct & Manage",
+   domains:["process","people"],approach:["pred","agile","hybrid"],
+   mindset:"Execute the PM Plan. The PM coordinates, facilitates, and removes obstacles — servant leadership in action. This is where deliverables and work performance data are produced."},
+  {id:4,name:"Manage Project Knowledge",ka:"Integration",pg:"Executing",short:"Manage Knowledge",
+   domains:["people","process"],approach:["pred","agile","hybrid"],
+   mindset:"Lessons learned happen THROUGHOUT the project, not just at the end. Use retrospectives (agile) or lessons learned sessions (predictive). Share knowledge across the organization."},
+  {id:5,name:"Monitor & Control Project Work",ka:"Integration",pg:"Monitoring & Controlling",short:"M&C Project Work",
+   domains:["process"],approach:["pred","agile","hybrid"],
+   mindset:"Compare actual performance vs. the plan. ALL Work Performance Info from other M&C processes feeds here. Generate change requests as needed — never just fix things without formal change control."},
+  {id:6,name:"Perform Integrated Change Control",ka:"Integration",pg:"Monitoring & Controlling",short:"Integrated CC",
+   domains:["process"],approach:["pred","hybrid"],
+   mindset:"CRITICAL EXAM TOPIC: All changes go through here. The CCB (Change Control Board) reviews and approves/rejects. Never implement changes without approval. In agile, changes flow through the product backlog instead."},
+  {id:7,name:"Close Project or Phase",ka:"Integration",pg:"Closing",short:"Close Project",
+   domains:["process","business"],approach:["pred","agile","hybrid"],
+   mindset:"Get formal acceptance of deliverables, archive documents, release resources, capture final lessons learned. Don't skip steps — even if stakeholders are eager to move on."},
+
+  {id:8,name:"Plan Scope Management",ka:"Scope",pg:"Planning",short:"Plan Scope",
+   domains:["process"],approach:["pred","hybrid"],
+   mindset:"Decide HOW you'll define, validate, and control scope. In predictive, scope is locked early. In hybrid, some scope is fixed and some is adaptive."},
+  {id:9,name:"Collect Requirements",ka:"Scope",pg:"Planning",short:"Collect Req",
+   domains:["process","people"],approach:["pred","agile","hybrid"],
+   mindset:"Engage stakeholders to gather ALL requirements. Use interviews, focus groups, prototyping. In agile, this is continuous via the product backlog. Traceability matrix links requirements to deliverables."},
+  {id:10,name:"Define Scope",ka:"Scope",pg:"Planning",short:"Define Scope",
+   domains:["process"],approach:["pred","hybrid"],
+   mindset:"Create the project scope statement — what's IN and what's OUT. Exclusions are just as important as inclusions. This prevents scope creep."},
+  {id:11,name:"Create WBS",ka:"Scope",pg:"Planning",short:"Create WBS",
+   domains:["process"],approach:["pred","hybrid"],
+   mindset:"Decompose deliverables into manageable work packages. The WBS is DELIVERABLE-oriented, not activity-oriented. The WBS Dictionary provides details for each component. The scope baseline = scope statement + WBS + WBS dictionary."},
+  {id:12,name:"Validate Scope",ka:"Scope",pg:"Monitoring & Controlling",short:"Validate Scope",
+   domains:["process"],approach:["pred","hybrid"],
+   mindset:"Formal acceptance of completed deliverables by the customer/sponsor. This is DIFFERENT from Control Quality — QC checks correctness, Validate Scope checks acceptance. The exam loves this distinction."},
+  {id:13,name:"Control Scope",ka:"Scope",pg:"Monitoring & Controlling",short:"Control Scope",
+   domains:["process"],approach:["pred","hybrid"],
+   mindset:"Monitor scope and manage changes to the scope baseline. Scope creep = uncontrolled changes. Gold plating = adding extras not requested. Both are bad — follow change control."},
+
+  {id:14,name:"Plan Schedule Management",ka:"Schedule",pg:"Planning",short:"Plan Schedule",
+   domains:["process"],approach:["pred","hybrid"],
+   mindset:"Define HOW you'll develop, manage, and control the schedule. Choose the scheduling methodology and tools."},
+  {id:15,name:"Define Activities",ka:"Schedule",pg:"Planning",short:"Define Activities",
+   domains:["process"],approach:["pred","hybrid"],
+   mindset:"Break WBS work packages into activities. Activities are the ACTIONS needed to produce deliverables. Include milestones (zero-duration markers of achievement)."},
+  {id:16,name:"Sequence Activities",ka:"Schedule",pg:"Planning",short:"Sequence Activities",
+   domains:["process"],approach:["pred","hybrid"],
+   mindset:"Determine dependencies (FS, FF, SS, SF). Build the network diagram. Understand leads and lags. This creates the logical flow of project work."},
+  {id:17,name:"Estimate Activity Durations",ka:"Schedule",pg:"Planning",short:"Est Durations",
+   domains:["process"],approach:["pred","hybrid"],
+   mindset:"Use analogous, parametric, three-point (PERT), or bottom-up estimating. The team doing the work should help estimate — not just the PM."},
+  {id:18,name:"Develop Schedule",ka:"Schedule",pg:"Planning",short:"Dev Schedule",
+   domains:["process"],approach:["pred","hybrid"],
+   mindset:"Apply Critical Path Method (CPM), resource optimization, and schedule compression (crashing/fast-tracking). The schedule baseline becomes part of the PM Plan."},
+  {id:19,name:"Control Schedule",ka:"Schedule",pg:"Monitoring & Controlling",short:"Control Schedule",
+   domains:["process"],approach:["pred","agile","hybrid"],
+   mindset:"Track progress against the schedule baseline. In agile, use burndown/burnup charts and velocity. Update forecasts. Generate change requests for significant variances."},
+
+  {id:20,name:"Plan Cost Management",ka:"Cost",pg:"Planning",short:"Plan Cost",
+   domains:["process"],approach:["pred","hybrid"],
+   mindset:"Define HOW costs will be estimated, budgeted, managed, and controlled. Set rules for measuring EVM."},
+  {id:21,name:"Estimate Costs",ka:"Cost",pg:"Planning",short:"Estimate Costs",
+   domains:["process"],approach:["pred","hybrid"],
+   mindset:"Develop cost approximations for all project resources. Use analogous, parametric, bottom-up, or three-point estimates. Include contingency reserves."},
+  {id:22,name:"Determine Budget",ka:"Cost",pg:"Planning",short:"Determine Budget",
+   domains:["process"],approach:["pred","hybrid"],
+   mindset:"Aggregate costs into the cost baseline. Budget = cost baseline + management reserves. The cost baseline is what you measure EVM against."},
+  {id:23,name:"Control Costs",ka:"Cost",pg:"Monitoring & Controlling",short:"Control Costs",
+   domains:["process"],approach:["pred","hybrid"],
+   mindset:"EVM lives here: CV, SV, CPI, SPI, EAC, ETC, TCPI. Monitor spending vs. baseline. 'Variances subtract, indices divide' — Ramdayal's memory trick."},
+
+  {id:24,name:"Plan Quality Management",ka:"Quality",pg:"Planning",short:"Plan Quality",
+   domains:["process"],approach:["pred","agile","hybrid"],
+   mindset:"Define quality standards and how to satisfy them. Cost of Quality = Cost of Conformance + Cost of Nonconformance. Prevention over inspection."},
+  {id:25,name:"Manage Quality",ka:"Quality",pg:"Executing",short:"Manage Quality",
+   domains:["process"],approach:["pred","agile","hybrid"],
+   mindset:"Execute the quality plan. This is about PROCESS quality — audits, process analysis. Translates the quality plan into quality activities. Formerly 'Quality Assurance.'"},
+  {id:26,name:"Control Quality",ka:"Quality",pg:"Monitoring & Controlling",short:"Control Quality",
+   domains:["process"],approach:["pred","agile","hybrid"],
+   mindset:"Inspect deliverables for correctness. Tools: inspections, testing, statistical sampling. Verified deliverables go to Validate Scope for acceptance."},
+
+  {id:27,name:"Plan Resource Management",ka:"Resource",pg:"Planning",short:"Plan Resource",
+   domains:["people","process"],approach:["pred","agile","hybrid"],
+   mindset:"Identify what resources you need (team, equipment, materials). Create RACI charts. Define how to acquire, develop, manage, and release resources."},
+  {id:28,name:"Estimate Activity Resources",ka:"Resource",pg:"Planning",short:"Est Resources",
+   domains:["process"],approach:["pred","hybrid"],
+   mindset:"Determine type and quantity of resources for each activity. Resource breakdown structure helps organize this. Feeds into duration and cost estimates."},
+  {id:29,name:"Acquire Resources",ka:"Resource",pg:"Executing",short:"Acquire Resources",
+   domains:["people"],approach:["pred","agile","hybrid"],
+   mindset:"Get the team and resources assigned. May involve negotiation with functional managers. In agile, self-organizing teams select their own members when possible."},
+  {id:30,name:"Develop Team",ka:"Resource",pg:"Executing",short:"Develop Team",
+   domains:["people"],approach:["pred","agile","hybrid"],
+   mindset:"Improve competencies and team interaction. Tuckman's model: Forming→Storming→Norming→Performing→Adjourning. Servant leaders invest in team development."},
+  {id:31,name:"Manage Team",ka:"Resource",pg:"Executing",short:"Manage Team",
+   domains:["people"],approach:["pred","agile","hybrid"],
+   mindset:"Track performance, provide feedback, resolve conflicts. Conflict resolution preference order: Collaborate/Problem-Solve first, then Compromise. Avoid Withdraw/Avoid and Force."},
+  {id:32,name:"Control Resources",ka:"Resource",pg:"Monitoring & Controlling",short:"Control Resources",
+   domains:["process"],approach:["pred","hybrid"],
+   mindset:"Ensure physical resources are available as planned. Monitor actual vs. planned resource usage. Generate change requests for resource issues."},
+
+  {id:33,name:"Plan Communications Management",ka:"Communications",pg:"Planning",short:"Plan Comms",
+   domains:["people","process"],approach:["pred","agile","hybrid"],
+   mindset:"Who needs what info, when, how, and how often. Communication channels formula: n(n-1)/2. The PM spends ~90% of time communicating."},
+  {id:34,name:"Manage Communications",ka:"Communications",pg:"Executing",short:"Manage Comms",
+   domains:["people"],approach:["pred","agile","hybrid"],
+   mindset:"Create, collect, distribute, store project information per the plan. Use the right medium for the message. Face-to-face is the most effective."},
+  {id:35,name:"Monitor Communications",ka:"Communications",pg:"Monitoring & Controlling",short:"Monitor Comms",
+   domains:["people"],approach:["pred","agile","hybrid"],
+   mindset:"Ensure communication needs are being met. Are stakeholders getting the right info at the right time? Adjust the communications plan as needed."},
+
+  {id:36,name:"Plan Risk Management",ka:"Risk",pg:"Planning",short:"Plan Risk",
+   domains:["process"],approach:["pred","agile","hybrid"],
+   mindset:"Define HOW risk management activities will be conducted. Set risk categories, probability/impact matrix, risk appetite and thresholds."},
+  {id:37,name:"Identify Risks",ka:"Risk",pg:"Planning",short:"Identify Risks",
+   domains:["process"],approach:["pred","agile","hybrid"],
+   mindset:"Find and document ALL risks — threats AND opportunities. Use brainstorming, SWOT, interviews. This is iterative — done throughout the project. Output: Risk Register."},
+  {id:38,name:"Perform Qualitative Risk Analysis",ka:"Risk",pg:"Planning",short:"Qual Risk",
+   domains:["process"],approach:["pred","agile","hybrid"],
+   mindset:"Assess probability and impact of identified risks. Use the P×I matrix to prioritize. This is quick and subjective — every project does this."},
+  {id:39,name:"Perform Quantitative Risk Analysis",ka:"Risk",pg:"Planning",short:"Quant Risk",
+   domains:["process"],approach:["pred"],
+   mindset:"Numerically analyze the combined effect of risks. Monte Carlo simulation, decision tree analysis. NOT done on every project — only large/complex ones."},
+  {id:40,name:"Plan Risk Responses",ka:"Risk",pg:"Planning",short:"Plan Risk Resp",
+   domains:["process"],approach:["pred","agile","hybrid"],
+   mindset:"For threats: Avoid, Transfer, Mitigate, Accept. For opportunities: Exploit, Share, Enhance, Accept. Escalate for both. Assign a risk owner to each risk."},
+  {id:41,name:"Implement Risk Responses",ka:"Risk",pg:"Executing",short:"Impl Risk Resp",
+   domains:["process"],approach:["pred","agile","hybrid"],
+   mindset:"Execute the planned risk responses. Don't just plan — ACT. Ensure risk owners follow through. This is about action, not just documentation."},
+  {id:42,name:"Monitor Risks",ka:"Risk",pg:"Monitoring & Controlling",short:"Monitor Risks",
+   domains:["process"],approach:["pred","agile","hybrid"],
+   mindset:"Track identified risks, monitor residual risks, identify new risks, evaluate risk response effectiveness. Risks can change — keep the register updated."},
+
+  {id:43,name:"Plan Procurement Management",ka:"Procurement",pg:"Planning",short:"Plan Procure",
+   domains:["process","business"],approach:["pred","hybrid"],
+   mindset:"Make-or-buy decisions. Define contract types (FFP, T&M, CPFF, etc.). FFP = lowest risk for buyer, CPFF = highest risk for buyer. Prepare procurement documents (SOW, RFP)."},
+  {id:44,name:"Conduct Procurements",ka:"Procurement",pg:"Executing",short:"Conduct Procure",
+   domains:["process"],approach:["pred","hybrid"],
+   mindset:"Obtain seller responses, select sellers, award contracts. Use evaluation criteria defined in planning. Independent estimates help validate bids."},
+  {id:45,name:"Control Procurements",ka:"Procurement",pg:"Monitoring & Controlling",short:"Control Procure",
+   domains:["process"],approach:["pred","hybrid"],
+   mindset:"Manage procurement relationships, monitor contract performance, handle changes and claims. Both buyer AND seller have obligations to fulfill."},
+
+  {id:46,name:"Identify Stakeholders",ka:"Stakeholder",pg:"Initiating",short:"ID Stakeholders",
+   domains:["people","business"],approach:["pred","agile","hybrid"],
+   mindset:"Find ALL people/groups affected by or who can affect the project. Create the stakeholder register. This is iterative — new stakeholders emerge over time."},
+  {id:47,name:"Plan Stakeholder Engagement",ka:"Stakeholder",pg:"Planning",short:"Plan Stakeholder",
+   domains:["people"],approach:["pred","agile","hybrid"],
+   mindset:"Develop strategies to effectively engage stakeholders. Map current vs. desired engagement levels (Unaware→Resistant→Neutral→Supportive→Leading). Focus on closing gaps."},
+  {id:48,name:"Manage Stakeholder Engagement",ka:"Stakeholder",pg:"Executing",short:"Manage Stakeholder",
+   domains:["people"],approach:["pred","agile","hybrid"],
+   mindset:"Communicate, listen, and work with stakeholders to meet their needs. Address concerns proactively. Build trust and relationships — servant leadership at its core."},
+  {id:49,name:"Monitor Stakeholder Engagement",ka:"Stakeholder",pg:"Monitoring & Controlling",short:"Monitor Stakeholder",
+   domains:["people"],approach:["pred","agile","hybrid"],
+   mindset:"Are engagement strategies working? Adjust approaches as needed. Stakeholder attitudes can shift — stay vigilant and responsive."},
+];
+
+const FLOWS = [
+  [1,2,"Project Charter"],[1,46,"Project Charter"],[1,8,"Project Charter"],
+  [46,2,"Stakeholder Register"],[46,47,"Stakeholder Register"],[46,9,"Stakeholder Register"],
+  [46,33,"Stakeholder Register"],[46,37,"Stakeholder Register"],
+  [8,9,"Scope Mgmt Plan"],[8,10,"Scope Mgmt Plan"],
+  [9,10,"Requirements Documentation"],[9,11,"Requirements Documentation"],[9,24,"Requirements Documentation"],
+  [10,11,"Project Scope Statement"],[10,15,"Project Scope Statement"],[10,37,"Project Scope Statement"],
+  [11,15,"WBS / WBS Dictionary"],[11,21,"WBS / WBS Dictionary"],[11,28,"WBS / WBS Dictionary"],
+  [11,17,"WBS / WBS Dictionary"],[11,24,"WBS / WBS Dictionary"],
+  [14,15,"Schedule Mgmt Plan"],[15,16,"Activity List"],[15,17,"Activity List"],
+  [15,28,"Activity List"],[15,21,"Activity List"],
+  [16,18,"Schedule Network Diagrams"],[17,18,"Duration Estimates"],
+  [28,17,"Resource Requirements"],[28,21,"Resource Requirements"],[28,18,"Resource Requirements"],
+  [18,22,"Project Schedule"],[18,2,"Schedule Baseline"],
+  [20,21,"Cost Mgmt Plan"],[21,22,"Cost Estimates"],[22,2,"Cost Baseline"],[22,23,"Cost Baseline"],
+  [24,25,"Quality Mgmt Plan"],[24,26,"Quality Metrics"],
+  [27,28,"Resource Mgmt Plan"],[27,29,"Resource Mgmt Plan"],[27,30,"Resource Mgmt Plan"],
+  [29,30,"Physical Resource Assignments"],[30,31,"Team Performance Assessments"],
+  [36,37,"Risk Mgmt Plan"],[37,38,"Risk Register"],[38,39,"Risk Register (updated)"],
+  [39,40,"Quantified Risk Assessment"],[40,41,"Risk Response Plans"],[40,2,"Risk Response Plans"],
+  [41,42,"Risk Response Implementation"],
+  [43,44,"Procurement Mgmt Plan"],[43,2,"Procurement Mgmt Plan"],
+  [44,45,"Agreements / Contracts"],
+  [47,48,"Stakeholder Engagement Plan"],[48,49,"Engagement Feedback"],
+  [2,3,"Project Management Plan"],[2,5,"Project Management Plan"],[2,6,"Project Management Plan"],[2,7,"Project Management Plan"],
+  [3,5,"Work Performance Data"],[3,6,"Change Requests"],[3,26,"Deliverables"],
+  [3,4,"Lessons Learned Register"],[3,4,"Deliverables"],[3,25,"Deliverables"],
+  [6,3,"Approved Change Requests"],[6,2,"PM Plan Updates"],[5,6,"Change Requests"],
+  [26,12,"Verified Deliverables"],[12,7,"Accepted Deliverables"],
+  [23,5,"Work Perf Info (Cost)"],[19,5,"Work Perf Info (Schedule)"],
+  [13,5,"Work Perf Info (Scope)"],[26,5,"Work Perf Info (Quality)"],
+  [32,5,"Work Perf Info (Resource)"],[35,5,"Work Perf Info (Comms)"],
+  [42,5,"Work Perf Info (Risk)"],[45,5,"Work Perf Info (Procure)"],
+  [49,5,"Work Perf Info (Stakeholder)"],
+  [5,34,"Work Performance Reports"],[33,34,"Communications Mgmt Plan"],
+  [34,35,"Project Communications"],
+];
+
+// ======== EXTERNAL INPUTS & OUTPUTS (not from other processes) ========
+// Add items here for any process. These show as gold-colored items in the detail panel.
+// Format: processId: { inputs: ["item1", "item2"], outputs: ["item1", "item2"] }
+const EXTERNAL_IO = {
+  1:  { inputs: ["Business Documents","Business Case","Benefits Management Plan","Agreements","Enterprise Environmental Factors (EEFs)","Organizational Process Assets (OPAs)"],
+        outputs: ["Project Charter","Assumption Log"] },
+  2:  { inputs: ["EEFs","OPAs"], outputs: ["Project Management Plan"] },
+  3:  { inputs: ["EEFs","OPAs"], outputs: ["Deliverables","Work Performance Data","Issue Log","Change Requests","PM Plan Updates","Project Document Updates"] },
+  4:  { inputs: ["EEFs","OPAs"], outputs: ["Lessons Learned Register","PM Plan Updates","OPA Updates"] },
+  5:  { inputs: ["Agreements","EEFs","OPAs"], outputs: ["Work Performance Reports","Change Requests","PM Plan Updates"] },
+  6:  { inputs: ["EEFs","OPAs"], outputs: ["Approved Change Requests","PM Plan Updates","Project Document Updates"] },
+  7:  { inputs: ["Project Charter","Business Documents","Agreements","Procurement Documentation","EEFs","OPAs"], outputs: ["PM Plan Updates","Final Product/Service/Result","Final Report","OPA Updates"] },
+  8:  { inputs: ["EEFs","OPAs"], outputs: ["Scope Management Plan","Requirements Management Plan"] },
+  9:  { inputs: ["Project Charter","Business Documents","Agreements","EEFs","OPAs"], outputs: ["Requirements Documentation","Requirements Traceability Matrix"] },
+  10: { inputs: ["Project Charter","EEFs","OPAs"], outputs: ["Project Scope Statement","Project Document Updates"] },
+  11: { inputs: ["EEFs","OPAs"], outputs: ["Scope Baseline (WBS + WBS Dictionary + Scope Statement)","Project Document Updates","Definition of Done"] },
+  12: { inputs: ["Project Management Plan","Project Documents","Work Performance Data"], outputs: ["Accepted Deliverables","Work Performance Info","Change Requests"] },
+  13: { inputs: ["Project Management Plan","Project Documents","Work Performance Data"], outputs: ["Work Performance Info","Change Requests","PM Plan Updates","Project Document Updates","OPA Updates"] },
+  14: { inputs: ["EEFs","OPAs"], outputs: ["Schedule Management Plan"] },
+  15: { inputs: ["EEFs","OPAs"], outputs: ["Activity List","Activity Attributes","Milestone List","Change Requests"] },
+  16: { inputs: ["EEFs","OPAs"], outputs: ["Project Schedule Network Diagrams","Project Document Updates"] },
+  17: { inputs: ["EEFs","OPAs"], outputs: ["Duration Estimates","Basis of Estimates","Project Document Updates"] },
+  18: { inputs: ["EEFs","OPAs"], outputs: ["Schedule Baseline","Project Schedule","Schedule Data","Change Requests"] },
+  19: { inputs: ["Project Management Plan","Work Performance Data","OPAs"], outputs: ["Work Performance Info","Schedule Forecasts","Change Requests","PM Plan Updates"] },
+  20: { inputs: ["EEFs","OPAs"], outputs: ["Cost Management Plan"] },
+  21: { inputs: ["EEFs","OPAs"], outputs: ["Cost Estimates","Basis of Estimates","Project Document Updates"] },
+  22: { inputs: ["Resource Management Plan","Scope Baseline","EEFs","OPAs"], outputs: ["Cost Baseline","Project Funding Requirements","Project Document Updates"] },
+  23: { inputs: ["Project Funding Requirements","Work Performance Data","OPAs"], outputs: ["Work Performance Info","Cost Forecasts","Change Requests","PM Plan Updates"] },
+  24: { inputs: ["Stakeholder Register","Risk Register","Assumption Log","Requirements Traceability Matrix","EEFs","OPAs"], outputs: ["Quality Management Plan","Quality Metrics","PM Plan Updates","Project Document Updates"] },
+  25: { inputs: ["Quality Metrics","Quality Control Measurements","Lessons Learned Register","Risk Register"], outputs: ["Quality Reports","Test & Evaluation Documents","Change Requests","PM Plan Updates"] },
+  26: { inputs: ["Work Performance Data","Approved Change Requests"], outputs: ["Verified Deliverables","Work Performance Info","Change Requests","PM Plan Updates"] },
+  27: { inputs: ["Project Schedule","Requirements Documentation","Risk Register","Stakeholder Register","EEFs","OPAs"], outputs: ["Resource Management Plan","Team Charter","Project Document Updates"] },
+  28: { inputs: ["Risk Register","Assumption Log","Cost Estimates","EEFs","OPAs"], outputs: ["Resource Requirements","Resource Breakdown Structure","Project Document Updates"] },
+  29: { inputs: ["Resource Calendars","Resource Requirements","Project Schedule","Stakeholder Register","EEFs","OPAs"], outputs: ["Physical Resource Assignments","Project Team Assignments","Resource Calendars","Change Requests"] },
+  30: { inputs: ["EEFs","OPAs"], outputs: ["Team Performance Assessments","Change Requests","PM Plan Updates","Project Document Updates","EEF Updates","OPA Updates"] },
+  31: { inputs: ["Work Performance Reports","Issue Log","Lessons Learned Register","Team Charter","Project Team Assignments","EEFs","OPAs"], outputs: ["Change Requests","PM Plan Updates","Project Document Updates","EEF Updates"] },
+  32: { inputs: ["Issue Log","Lessons Learned Register","Resource Requirements","Risk Register","Project Schedule"], outputs: ["Work Performance Info","Change Requests","PM Plan Updates","Project Document Updates"] },
+  33: { inputs: ["Requirements Documentation","EEFs","OPAs"], outputs: ["Communications Management Plan","PM Plan Updates","Project Document Updates"] },
+  34: { inputs: ["Stakeholder Register","Risk Report","Quality Report","Issue Log","Change Log","EEFs","OPAs"], outputs: ["Project Communications","PM Plan Updates","Project Document Updates","OPA Updates"] },
+  35: { inputs: ["Project Communications","Issue Log","Lessons Learned Register","EEFs","OPAs"], outputs: ["Work Performance Info","Change Requests","PM Plan Updates","Project Document Updates"] },
+  36: { inputs: ["EEFs","OPAs"], outputs: ["Risk Management Plan"] },
+  37: { inputs: ["EEFs","OPAs","Procurement Documentation"], outputs: ["Risk Register","Risk Report","Project Document Updates"] },
+  38: { inputs: ["EEFs","OPAs"], outputs: ["Project Document Updates (Risk Register updated with priorities)"] },
+  39: { inputs: ["EEFs","OPAs"], outputs: ["Project Document Updates (Quantified overall project risk)"] },
+  40: { inputs: ["EEFs","OPAs"], outputs: ["Change Requests","PM Plan Updates","Project Document Updates"] },
+  41: { inputs: [], outputs: ["Change Requests","Project Document Updates"] },
+  42: { inputs: [], outputs: ["Work Performance Info","Change Requests","PM Plan Updates","Project Document Updates","OPA Updates"] },
+  43: { inputs: ["EEFs","OPAs"], outputs: ["Procurement Management Plan","Procurement Strategy","Bid Documents","Procurement SOW","Source Selection Criteria","Make-or-Buy Decisions","Change Requests"] },
+  44: { inputs: ["EEFs","OPAs"], outputs: ["Selected Sellers","Agreements","Change Requests","PM Plan Updates","Project Document Updates","OPA Updates"] },
+  45: { inputs: [], outputs: ["Closed Procurements","Work Performance Info","Procurement Documentation Updates","Change Requests","PM Plan Updates"] },
+  46: { inputs: ["Business Documents","Agreements","EEFs","OPAs"], outputs: ["Stakeholder Register","Change Requests","PM Plan Updates"] },
+  47: { inputs: ["EEFs","OPAs"], outputs: ["Stakeholder Engagement Plan"] },
+  48: { inputs: ["EEFs","OPAs"], outputs: ["Change Requests","PM Plan Updates","Project Document Updates"] },
+  49: { inputs: ["EEFs","OPAs"], outputs: ["Work Performance Info","Change Requests","PM Plan Updates","Project Document Updates"] },
+};
+
+function getById(id){return P.find(p=>p.id===id);}
+
+let selectedId=null, currentView='matrix', studyIdx=0, studyRevealed=false, activeDomain='all';
+
+function getFlows(id){
+  if(!id) return{incoming:[],outgoing:[]};
+  return{incoming:FLOWS.filter(f=>f[1]===id),outgoing:FLOWS.filter(f=>f[0]===id)};
+}
+function getConnectedIds(id){
+  const s=new Set();if(!id)return s;
+  const fl=getFlows(id);
+  fl.incoming.forEach(f=>s.add(f[0]));fl.outgoing.forEach(f=>s.add(f[1]));return s;
+}
+function selectProcess(id){selectedId=(selectedId===id)?null:id;render();}
+function switchView(v){
+  currentView=v;selectedId=null;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+v).classList.add('active');
+  document.getElementById('view-matrix').style.display=v==='matrix'?'grid':'none';
+  document.getElementById('view-flow').style.display=v==='flow'?'grid':'none';
+  document.getElementById('view-study').style.display=v==='study'?'block':'none';
+  render();
+}
+function filterDomain(d){
+  activeDomain=d;
+  document.querySelectorAll('.domain-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`.domain-btn[data-d="${d}"]`).classList.add('active');
+  render();
+}
+function passesFilter(proc){
+  if(activeDomain==='all')return true;
+  if(['pred','agile','hybrid'].includes(activeDomain))return proc.approach.includes(activeDomain);
+  return proc.domains.includes(activeDomain);
+}
+
+function approachDots(proc){
+  return proc.approach.map(a=>`<div class="dot dot-${a}"></div>`).join('');
+}
+function domainTags(proc){
+  return proc.domains.map(d=>`<span class="meta-tag meta-domain-${d}">${d}</span>`).join('');
+}
+function approachTags(proc){
+  return proc.approach.map(a=>{
+    const l={pred:'Predictive',agile:'Agile',hybrid:'Hybrid'}[a];
+    return`<span class="meta-tag meta-${a}">${l}</span>`;
+  }).join('');
+}
+
+function makeCard(proc,compact){
+  const isSelected=selectedId===proc.id;
+  const connected=getConnectedIds(selectedId);
+  const isConnected=connected.has(proc.id);
+  const fl=getFlows(selectedId);
+  const isIn=fl.incoming.some(f=>f[0]===proc.id);
+  const isOut=fl.outgoing.some(f=>f[1]===proc.id);
+  const isDimmed=selectedId&&!isSelected&&!isConnected;
+  const filteredOut=!passesFilter(proc);
+  const kaColor=KAC[proc.ka];
+
+  let bc='rgba(255,255,255,0.06)';
+  if(isSelected)bc=kaColor;
+  else if(isIn)bc='#4ade80';
+  else if(isOut)bc='#60a5fa';
+
+  let cls='pcard';if(isSelected)cls+=' selected';if(isDimmed||filteredOut)cls+=' dimmed';
+  let bg=isSelected?`linear-gradient(135deg,${kaColor}22,${kaColor}11)`:'rgba(255,255,255,0.03)';
+  if(isDimmed||filteredOut)bg='rgba(255,255,255,0.01)';
+
+  let badges='';
+  if(isIn&&!isSelected)badges+='<div class="badge-io badge-in">IN</div>';
+  if(isOut&&!isSelected)badges+='<div class="badge-io badge-out">OUT</div>';
+
+  return`<div class="${cls}" style="border-color:${bc};background:${bg}" onclick="selectProcess(${proc.id})">
+    <div class="katag mono" style="color:${kaColor}"><span>${compact?proc.ka.slice(0,4):proc.ka}</span><span class="approach-dots">${approachDots(proc)}</span></div>
+    <div class="pname">${compact?proc.short:proc.name}</div>
+    ${badges}
+  </div>`;
+}
+
+function renderDetail(container){
+  const el=document.getElementById(container);
+  if(!el)return;
+  if(!selectedId){
+    el.innerHTML=`<div class="detail-empty">Click any process to see its ITTO connections and Ramdayal mindset tip</div>
+    ${renderHubsHTML()}`;
+    return;
+  }
+  const proc=getById(selectedId);
+  const fl=getFlows(selectedId);
+  const kaColor=KAC[proc.ka];
+
+  let inHtml='';
+  if(fl.incoming.length===0 && !(EXTERNAL_IO[selectedId]&&EXTERNAL_IO[selectedId].inputs.length))inHtml='<div class="io-empty">Primary starting process</div>';
+  else {
+    fl.incoming.forEach(f=>{
+      const src=getById(f[0]);
+      inHtml+=`<div class="io-item io-in" onclick="event.stopPropagation();selectProcess(${src.id})">
+        <div class="art">${f[2]}</div><div class="src">from: ${src.short} (${src.ka})</div></div>`;
+    });
+    const ext=EXTERNAL_IO[selectedId];
+    if(ext&&ext.inputs.length){
+      if(fl.incoming.length)inHtml+='<div class="ext-divider mono">── external ──</div>';
+      ext.inputs.forEach(item=>{inHtml+=`<div class="io-item io-ext"><div class="art">${item}</div><div class="src">external input</div></div>`;});
+    }
+  }
+
+  let outHtml='';
+  if(fl.outgoing.length===0 && !(EXTERNAL_IO[selectedId]&&EXTERNAL_IO[selectedId].outputs.length))outHtml='<div class="io-empty">Terminal process</div>';
+  else {
+    fl.outgoing.forEach(f=>{
+      const dest=getById(f[1]);
+      outHtml+=`<div class="io-item io-out" onclick="event.stopPropagation();selectProcess(${dest.id})">
+        <div class="art">${f[2]}</div><div class="src">to: ${dest.short} (${dest.ka})</div></div>`;
+    });
+    const ext=EXTERNAL_IO[selectedId];
+    if(ext&&ext.outputs.length){
+      if(fl.outgoing.length)outHtml+='<div class="ext-divider mono">── standalone ──</div>';
+      ext.outputs.forEach(item=>{outHtml+=`<div class="io-item io-ext"><div class="art">${item}</div><div class="src">process output</div></div>`;});
+    }
+  }
+
+  const extIn=EXTERNAL_IO[selectedId]?EXTERNAL_IO[selectedId].inputs.length:0;
+  const extOut=EXTERNAL_IO[selectedId]?EXTERNAL_IO[selectedId].outputs.length:0;
+
+  el.innerHTML=`<div style="padding:2px">
+    <div class="detail-hdr" style="border-color:${kaColor};background:linear-gradient(135deg,${kaColor}15,transparent)">
+      <div class="proc-ka mono" style="color:${kaColor}">${proc.ka} · ${proc.pg}</div>
+      <div class="proc-name">${proc.name}</div>
+      <div class="proc-meta">${domainTags(proc)}${approachTags(proc)}</div>
+    </div>
+    <div class="mindset-card">
+      <div class="mc-title mono">🧠 Ramdayal Mindset Tip</div>
+      <div class="mc-text">${proc.mindset}</div>
+    </div>
+    <div class="io-grid">
+      <div><div class="io-title mono" style="color:#4ade80">← Inputs (${fl.incoming.length+extIn})</div>${inHtml}</div>
+      <div><div class="io-title mono" style="color:#60a5fa">Outputs → (${fl.outgoing.length+extOut})</div>${outHtml}</div>
+    </div>
+  </div>
+  ${renderHubsHTML()}`;
+}
+
+function renderHubsHTML(){
+  const hubData=P.map(p=>({
+    ...p,inC:FLOWS.filter(f=>f[1]===p.id).length,outC:FLOWS.filter(f=>f[0]===p.id).length
+  })).sort((a,b)=>(b.inC+b.outC)-(a.inC+a.outC)).slice(0,10);
+  let rows='';
+  hubData.forEach((p,i)=>{
+    const active=selectedId===p.id?' active':'';
+    rows+=`<div class="hub-row${active}" onclick="selectProcess(${p.id})">
+      <span class="hub-rank mono">${i+1}.</span>
+      <span class="hub-name" style="color:${KAC[p.ka]}">${p.short}</span>
+      <span class="hub-in mono">${p.inC}↓</span>
+      <span class="hub-out mono">${p.outC}↑</span>
+    </div>`;
+  });
+  return`<div class="hub-sec"><div class="hub-title mono">Top Hub Processes (Most Connected)</div>${rows}</div>`;
+}
+
+function renderMatrix(){
+  let h='<div class="matrix">';
+  h+='<div></div>';
+  PG.forEach(pg=>{h+=`<div class="matrix-hdr mono" style="color:${PGC[pg].light};border-color:${PGC[pg].accent}">${pg}</div>`;});
+  KA.forEach(ka=>{
+    h+=`<div class="ka-label mono" style="color:${KAC[ka]};border-left-color:${KAC[ka]}">${ka}</div>`;
+    PG.forEach(pg=>{
+      const procs=P.filter(p=>p.ka===ka&&p.pg===pg);
+      h+='<div class="matrix-cell">';procs.forEach(p=>{h+=makeCard(p,true);});h+='</div>';
+    });
+  });
+  h+='</div>';
+  document.getElementById('matrix-panel').innerHTML=h;
+  renderDetail('side-matrix');
+}
+
+function renderFlow(){
+  let h='<div class="flow-grid">';
+  PG.forEach(pg=>{
+    const procs=P.filter(p=>p.pg===pg);
+    const c=PGC[pg];
+    h+=`<div class="flow-col"><div class="flow-hdr mono" style="color:${c.light};border-color:${c.accent}">${pg}<small>${procs.length} processes</small></div><div class="flow-items">`;
+    procs.forEach(p=>{h+=makeCard(p,true);});
+    h+='</div></div>';
+  });
+  h+='</div>';
+  document.getElementById('flow-panel').innerHTML=h;
+  renderDetail('side-flow');
+}
+
+function studyPrev(){studyIdx=Math.max(0,studyIdx-1);studyRevealed=false;renderStudy();}
+function studyNext(){studyIdx=Math.min(48,studyIdx+1);studyRevealed=false;renderStudy();}
+function studyToggle(){studyRevealed=!studyRevealed;renderStudy();}
+
+function renderStudy(){
+  const proc=P[studyIdx];
+  const fl=getFlows(proc.id);
+  const kaColor=KAC[proc.ka];
+
+  let revealHtml='';
+  if(studyRevealed){
+    const ext=EXTERNAL_IO[proc.id]||{inputs:[],outputs:[]};
+    let inH='';
+    if(fl.incoming.length===0&&ext.inputs.length===0)inH='<div class="io-empty">Primary starting process</div>';
+    else {
+      fl.incoming.forEach(f=>{const s=getById(f[0]);inH+=`<div class="io-item io-in"><div class="art">${f[2]}</div><div class="src">from ${s.short}</div></div>`;});
+      if(ext.inputs.length){
+        if(fl.incoming.length)inH+='<div class="ext-divider mono">── external ──</div>';
+        ext.inputs.forEach(item=>{inH+=`<div class="io-item io-ext"><div class="art">${item}</div><div class="src">external input</div></div>`;});
+      }
+    }
+    let outH='';
+    if(fl.outgoing.length===0&&ext.outputs.length===0)outH='<div class="io-empty">Terminal process</div>';
+    else {
+      fl.outgoing.forEach(f=>{const d=getById(f[1]);outH+=`<div class="io-item io-out"><div class="art">${f[2]}</div><div class="src">to ${d.short}</div></div>`;});
+      if(ext.outputs.length){
+        if(fl.outgoing.length)outH+='<div class="ext-divider mono">── standalone ──</div>';
+        ext.outputs.forEach(item=>{outH+=`<div class="io-item io-ext"><div class="art">${item}</div><div class="src">process output</div></div>`;});
+      }
+    }
+    const totalIn=fl.incoming.length+ext.inputs.length;
+    const totalOut=fl.outgoing.length+ext.outputs.length;
+    revealHtml=`
+      <div class="mindset-card"><div class="mc-title mono">🧠 Ramdayal Mindset Tip</div><div class="mc-text">${proc.mindset}</div></div>
+      <div class="io-grid">
+        <div><div class="io-title mono" style="color:#4ade80">← Inputs (${totalIn})</div>${inH}</div>
+        <div><div class="io-title mono" style="color:#60a5fa">Outputs → (${totalOut})</div>${outH}</div>
+      </div>`;
+  }
+
+  document.getElementById('study-panel').innerHTML=`
+    <div class="study-nav">
+      <button class="sbtn" onclick="studyPrev()" ${studyIdx===0?'disabled':''}>← Prev</button>
+      <span class="study-counter mono">${studyIdx+1} / ${P.length}</span>
+      <button class="sbtn" onclick="studyNext()" ${studyIdx===48?'disabled':''}>Next →</button>
+    </div>
+    <div class="study-card" style="border-color:${kaColor};background:linear-gradient(135deg,${kaColor}15,transparent)">
+      <div class="katag mono" style="color:${kaColor}">${proc.ka} · ${proc.pg}</div>
+      <div class="pname">${proc.name}</div>
+      <div class="pmeta">${domainTags(proc)}${approachTags(proc)}</div>
+    </div>
+    <button class="reveal-btn ${studyRevealed?'shown':'hidden'}" onclick="studyToggle()">
+      ${studyRevealed?'Hide Details':'🧠 Reveal Mindset Tip, Inputs & Outputs'}
+    </button>
+    ${revealHtml}`;
+}
+
+// Mindset bar rotation
+const mindsetTips=[
+  "Think like a servant leader: facilitate, don't dictate. Support the team, remove obstacles.",
+  "Ask: What is the BEST and FIRST thing to do? Follow the process, don't skip steps.",
+  "In predictive: follow the plan, use formal change control. In agile: embrace change, iterate.",
+  "Never act alone. Collaborate, communicate, escalate only when needed.",
+  "The PM Plan is the authority. All decisions trace back to it.",
+  "Change Requests → Integrated Change Control → Approved → Direct & Manage. Know this loop cold.",
+  "Conflicts? Collaborate/Problem-Solve first. Avoid forcing or withdrawing.",
+  "Lessons learned happen THROUGHOUT the project, not just at the end.",
+  "Prevention over inspection. Plan quality in, don't inspect defects out.",
+  "Scope creep and gold plating are both problems. Stick to approved scope.",
+  "In agile, the product owner manages the backlog. The team self-organizes.",
+  "EVM tip: Negative variances = bad. CPI/SPI < 1 = over budget/behind schedule.",
+];
+let tipIdx=0;
+function rotateTip(){
+  tipIdx=(tipIdx+1)%mindsetTips.length;
+  document.querySelector('.mindset-bar .tip').textContent=mindsetTips[tipIdx];
+}
+setInterval(rotateTip,8000);
+
+function render(){
+  if(currentView==='matrix')renderMatrix();
+  else if(currentView==='flow')renderFlow();
+  else renderStudy();
+}
+render();
+</script>
+</body>
+</html>
