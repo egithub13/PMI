@@ -193,33 +193,6 @@
   .io-ext .art { color: #ffd700; }
   .io-ext .src { font-size: 9px; color: rgba(255,215,0,0.45); }
   .ext-divider { font-size: 9px; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 0.5px; margin: 6px 0 4px 2px; }
-  .add-io-row { display: flex; gap: 4px; margin-top: 6px; }
-  .add-io-input {
-    flex: 1; padding: 6px 8px; border-radius: 5px; font-size: 11px;
-    border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.05);
-    color: #fff; font-family: 'Space Grotesk', sans-serif; outline: none;
-    transition: border-color 0.2s;
-  }
-  .add-io-input:focus { border-color: rgba(255,215,0,0.5); }
-  .add-io-input::placeholder { color: rgba(255,255,255,0.25); }
-  .add-io-btn {
-    padding: 5px 10px; border-radius: 5px; border: 1px solid rgba(255,215,0,0.3);
-    background: rgba(255,215,0,0.1); color: #ffd700; cursor: pointer;
-    font-size: 10px; font-weight: 700; font-family: 'JetBrains Mono', monospace;
-    text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;
-    transition: all 0.2s;
-  }
-  .add-io-btn:hover { background: rgba(255,215,0,0.2); border-color: rgba(255,215,0,0.5); }
-  .io-ext-removable { position: relative; }
-  .io-ext-removable .remove-btn {
-    position: absolute; top: 4px; right: 4px; width: 14px; height: 14px;
-    border-radius: 50%; border: none; background: rgba(255,100,100,0.2);
-    color: #ff6b6b; font-size: 9px; cursor: pointer; display: flex;
-    align-items: center; justify-content: center; opacity: 0; transition: opacity 0.15s;
-    line-height: 1;
-  }
-  .io-ext-removable:hover .remove-btn { opacity: 1; }
-  .io-ext-removable .remove-btn:hover { background: rgba(255,100,100,0.4); }
 
   /* Hub Section */
   .hub-sec {
@@ -287,39 +260,6 @@
   .tips-title { font-size: 12px; font-weight: 700; color: #ffd700; margin-bottom: 8px; }
   .tips-body { font-size: 11px; color: rgba(255,255,255,0.6); line-height: 1.7; }
   .tips-body strong { color: rgba(255,255,255,0.85); }
-
-  /* Data Toolbar */
-  .data-toolbar {
-    max-width: 820px; margin: 16px auto; padding: 14px 20px; border-radius: 10px;
-    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
-    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  }
-  .data-toolbar .toolbar-label {
-    font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.5);
-    text-transform: uppercase; letter-spacing: 0.8px; margin-right: 4px;
-  }
-  .toolbar-btn {
-    padding: 6px 12px; border-radius: 6px; cursor: pointer;
-    font-size: 11px; font-weight: 600; font-family: 'JetBrains Mono', monospace;
-    transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px;
-  }
-  .toolbar-btn:hover { filter: brightness(1.3); }
-  .btn-export {
-    border: 1px solid rgba(74,222,128,0.3); background: rgba(74,222,128,0.08); color: #4ade80;
-  }
-  .btn-import {
-    border: 1px solid rgba(96,165,250,0.3); background: rgba(96,165,250,0.08); color: #60a5fa;
-  }
-  .btn-bake {
-    border: 1px solid rgba(255,215,0,0.3); background: rgba(255,215,0,0.08); color: #ffd700;
-  }
-  .btn-reset {
-    border: 1px solid rgba(255,100,100,0.3); background: rgba(255,100,100,0.08); color: #ff6b6b;
-  }
-  .toolbar-spacer { flex: 1; }
-  .toolbar-status {
-    font-size: 10px; color: rgba(74,222,128,0.7); transition: color 0.3s;
-  }
 
   @media (max-width: 1100px) {
     .main-grid { grid-template-columns: 1fr; }
@@ -390,17 +330,6 @@
     <strong>6. Three Domains Matter:</strong> People (~42%), Process (~50%), Business Environment (~8%). Most processes map across domains — know which hat you're wearing.
   </div>
 </div>
-
-<div class="data-toolbar">
-  <span class="toolbar-label mono">📦 Data</span>
-  <button class="toolbar-btn btn-export" onclick="exportJSON()" title="Download your I/O customizations as a JSON file for Git">⬇ Export JSON</button>
-  <button class="toolbar-btn btn-import" onclick="document.getElementById('import-file').click()" title="Import a JSON file to merge I/O customizations">⬆ Import JSON</button>
-  <button class="toolbar-btn btn-bake" onclick="exportFullHTML()" title="Download the full HTML with all current I/O baked in as new defaults — commit this to Git">⬇ Export Full HTML</button>
-  <span class="toolbar-spacer"></span>
-  <span class="toolbar-status mono" id="toolbar-status">💾 Auto-saved locally</span>
-  <button class="toolbar-btn btn-reset" onclick="resetToDefaults()" title="Clear all customizations and restore original defaults">↺ Reset</button>
-</div>
-<input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
 
 <script>
 // ======== DATA ========
@@ -617,9 +546,9 @@ const FLOWS = [
 ];
 
 // ======== EXTERNAL INPUTS & OUTPUTS (not from other processes) ========
-// Defaults are defined here. User additions are saved to localStorage and merged on load.
+// Add items here for any process. These show as gold-colored items in the detail panel.
 // Format: processId: { inputs: ["item1", "item2"], outputs: ["item1", "item2"] }
-const EXTERNAL_IO_DEFAULTS = {
+const EXTERNAL_IO = {
   1:  { inputs: ["Business Documents","Business Case","Benefits Management Plan","Agreements","Enterprise Environmental Factors (EEFs)","Organizational Process Assets (OPAs)"],
         outputs: ["Project Charter","Assumption Log"] },
   2:  { inputs: ["EEFs","OPAs"], outputs: ["Project Management Plan"] },
@@ -671,96 +600,6 @@ const EXTERNAL_IO_DEFAULTS = {
   48: { inputs: ["EEFs","OPAs"], outputs: ["Change Requests","PM Plan Updates","Project Document Updates"] },
   49: { inputs: ["EEFs","OPAs"], outputs: ["Work Performance Info","Change Requests","PM Plan Updates","Project Document Updates"] },
 };
-
-// ======== PERSISTENCE: Merge defaults with localStorage ========
-const STORAGE_KEY = 'pmp_ramdayal_external_io';
-
-function deepCloneDefaults(){
-  const clone={};
-  for(const id in EXTERNAL_IO_DEFAULTS){
-    clone[id]={
-      inputs: [...EXTERNAL_IO_DEFAULTS[id].inputs],
-      outputs: [...EXTERNAL_IO_DEFAULTS[id].outputs]
-    };
-  }
-  return clone;
-}
-
-function loadExternalIO(){
-  const base = deepCloneDefaults();
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if(saved){
-      const userData = JSON.parse(saved);
-      // Merge: for each process, combine defaults with user additions (no duplicates)
-      for(const id in userData){
-        if(!base[id]) base[id] = {inputs:[], outputs:[]};
-        userData[id].inputs.forEach(item => {
-          if(!base[id].inputs.includes(item)) base[id].inputs.push(item);
-        });
-        userData[id].outputs.forEach(item => {
-          if(!base[id].outputs.includes(item)) base[id].outputs.push(item);
-        });
-      }
-    }
-  } catch(e){ console.warn('Failed to load saved I/O data:', e); }
-  return base;
-}
-
-function saveExternalIO(){
-  try {
-    // Save only user additions (items NOT in defaults) to keep storage small
-    const userData = {};
-    for(const id in EXTERNAL_IO){
-      const defInputs = (EXTERNAL_IO_DEFAULTS[id]&&EXTERNAL_IO_DEFAULTS[id].inputs) || [];
-      const defOutputs = (EXTERNAL_IO_DEFAULTS[id]&&EXTERNAL_IO_DEFAULTS[id].outputs) || [];
-      const addedInputs = EXTERNAL_IO[id].inputs.filter(item => !defInputs.includes(item));
-      const addedOutputs = EXTERNAL_IO[id].outputs.filter(item => !defOutputs.includes(item));
-      // Also track removals from defaults
-      const removedInputs = defInputs.filter(item => !EXTERNAL_IO[id].inputs.includes(item));
-      const removedOutputs = defOutputs.filter(item => !EXTERNAL_IO[id].outputs.includes(item));
-      if(addedInputs.length || addedOutputs.length || removedInputs.length || removedOutputs.length){
-        userData[id] = {
-          inputs: addedInputs,
-          outputs: addedOutputs,
-          removedInputs: removedInputs,
-          removedOutputs: removedOutputs
-        };
-      }
-    }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
-  } catch(e){ console.warn('Failed to save I/O data:', e); }
-}
-
-function loadExternalIOFull(){
-  const base = deepCloneDefaults();
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if(saved){
-      const userData = JSON.parse(saved);
-      for(const id in userData){
-        if(!base[id]) base[id] = {inputs:[], outputs:[]};
-        // Remove items the user previously deleted from defaults
-        if(userData[id].removedInputs){
-          base[id].inputs = base[id].inputs.filter(item => !userData[id].removedInputs.includes(item));
-        }
-        if(userData[id].removedOutputs){
-          base[id].outputs = base[id].outputs.filter(item => !userData[id].removedOutputs.includes(item));
-        }
-        // Add user additions
-        userData[id].inputs.forEach(item => {
-          if(!base[id].inputs.includes(item)) base[id].inputs.push(item);
-        });
-        userData[id].outputs.forEach(item => {
-          if(!base[id].outputs.includes(item)) base[id].outputs.push(item);
-        });
-      }
-    }
-  } catch(e){ console.warn('Failed to load saved I/O data:', e); }
-  return base;
-}
-
-let EXTERNAL_IO = loadExternalIOFull();
 
 function getById(id){return P.find(p=>p.id===id);}
 
@@ -841,64 +680,7 @@ function makeCard(proc,compact){
   </div>`;
 }
 
-let currentDetailContainer='side-matrix';
-
-function ensureExtIO(id){
-  if(!EXTERNAL_IO[id]) EXTERNAL_IO[id]={inputs:[],outputs:[]};
-}
-
-function addInput(procId){
-  const input=document.getElementById('add-input-field');
-  if(!input)return;
-  const val=input.value.trim();
-  if(!val)return;
-  ensureExtIO(procId);
-  if(!EXTERNAL_IO[procId].inputs.includes(val)){
-    EXTERNAL_IO[procId].inputs.push(val);
-    saveExternalIO();
-  }
-  input.value='';
-  renderDetail(currentDetailContainer);
-}
-
-function addOutput(procId){
-  const input=document.getElementById('add-output-field');
-  if(!input)return;
-  const val=input.value.trim();
-  if(!val)return;
-  ensureExtIO(procId);
-  if(!EXTERNAL_IO[procId].outputs.includes(val)){
-    EXTERNAL_IO[procId].outputs.push(val);
-    saveExternalIO();
-  }
-  input.value='';
-  renderDetail(currentDetailContainer);
-}
-
-function removeExtIO(procId,type,idx){
-  if(!EXTERNAL_IO[procId])return;
-  EXTERNAL_IO[procId][type].splice(idx,1);
-  saveExternalIO();
-  renderDetail(currentDetailContainer);
-}
-
-function handleAddKey(e,procId,type){
-  if(e.key==='Enter'){
-    e.preventDefault();
-    if(type==='inputs') addInput(procId);
-    else addOutput(procId);
-  }
-}
-
-function resetToDefaults(){
-  if(!confirm('This will remove all your custom I/O additions and restore defaults. Continue?'))return;
-  try { localStorage.removeItem(STORAGE_KEY); } catch(e){}
-  EXTERNAL_IO = deepCloneDefaults();
-  render();
-}
-
 function renderDetail(container){
-  currentDetailContainer=container;
   const el=document.getElementById(container);
   if(!el)return;
   if(!selectedId){
@@ -921,10 +703,9 @@ function renderDetail(container){
     const ext=EXTERNAL_IO[selectedId];
     if(ext&&ext.inputs.length){
       if(fl.incoming.length)inHtml+='<div class="ext-divider mono">── external ──</div>';
-      ext.inputs.forEach((item,idx)=>{inHtml+=`<div class="io-item io-ext io-ext-removable"><div class="art">${item}</div><div class="src">external input</div><button class="remove-btn" onclick="event.stopPropagation();removeExtIO(${selectedId},'inputs',${idx})">×</button></div>`;});
+      ext.inputs.forEach(item=>{inHtml+=`<div class="io-item io-ext"><div class="art">${item}</div><div class="src">external input</div></div>`;});
     }
   }
-  inHtml+=`<div class="add-io-row"><input id="add-input-field" class="add-io-input" placeholder="Add input..." onkeydown="handleAddKey(event,${selectedId},'inputs')"><button class="add-io-btn" onclick="event.stopPropagation();addInput(${selectedId})">+ Add</button></div>`;
 
   let outHtml='';
   if(fl.outgoing.length===0 && !(EXTERNAL_IO[selectedId]&&EXTERNAL_IO[selectedId].outputs.length))outHtml='<div class="io-empty">Terminal process</div>';
@@ -937,10 +718,9 @@ function renderDetail(container){
     const ext=EXTERNAL_IO[selectedId];
     if(ext&&ext.outputs.length){
       if(fl.outgoing.length)outHtml+='<div class="ext-divider mono">── standalone ──</div>';
-      ext.outputs.forEach((item,idx)=>{outHtml+=`<div class="io-item io-ext io-ext-removable"><div class="art">${item}</div><div class="src">process output</div><button class="remove-btn" onclick="event.stopPropagation();removeExtIO(${selectedId},'outputs',${idx})">×</button></div>`;});
+      ext.outputs.forEach(item=>{outHtml+=`<div class="io-item io-ext"><div class="art">${item}</div><div class="src">process output</div></div>`;});
     }
   }
-  outHtml+=`<div class="add-io-row"><input id="add-output-field" class="add-io-input" placeholder="Add output..." onkeydown="handleAddKey(event,${selectedId},'outputs')"><button class="add-io-btn" onclick="event.stopPropagation();addOutput(${selectedId})">+ Add</button></div>`;
 
   const extIn=EXTERNAL_IO[selectedId]?EXTERNAL_IO[selectedId].inputs.length:0;
   const extOut=EXTERNAL_IO[selectedId]?EXTERNAL_IO[selectedId].outputs.length:0;
@@ -1094,127 +874,6 @@ function render(){
   else if(currentView==='flow')renderFlow();
   else renderStudy();
 }
-
-// ======== EXPORT / IMPORT / BAKE ========
-
-function showStatus(msg, color){
-  const el=document.getElementById('toolbar-status');
-  if(!el)return;
-  el.textContent=msg;
-  el.style.color=color||'rgba(74,222,128,0.7)';
-  setTimeout(()=>{ el.textContent='💾 Auto-saved locally'; el.style.color='rgba(74,222,128,0.7)'; },3000);
-}
-
-function exportJSON(){
-  // Export the full current state of EXTERNAL_IO (all processes, all items)
-  const exportData = {
-    _meta: {
-      format: 'pmp-ramdayal-io',
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      processCount: Object.keys(EXTERNAL_IO).length
-    },
-    externalIO: {}
-  };
-  for(const id in EXTERNAL_IO){
-    exportData.externalIO[id] = {
-      inputs: [...EXTERNAL_IO[id].inputs],
-      outputs: [...EXTERNAL_IO[id].outputs]
-    };
-  }
-  const blob = new Blob([JSON.stringify(exportData, null, 2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'pmp-io-customizations-' + new Date().toISOString().slice(0,10) + '.json';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showStatus('✅ JSON exported!', '#4ade80');
-}
-
-function importJSON(event){
-  const file = event.target.files[0];
-  if(!file)return;
-  const reader = new FileReader();
-  reader.onload = function(e){
-    try {
-      const data = JSON.parse(e.target.result);
-      let ioData = null;
-
-      // Support both formats: full export ({_meta, externalIO}) or raw object
-      if(data.externalIO) ioData = data.externalIO;
-      else if(data['1'] && data['1'].inputs) ioData = data;
-      else throw new Error('Unrecognized format');
-
-      let added = 0;
-      for(const id in ioData){
-        if(!EXTERNAL_IO[id]) EXTERNAL_IO[id] = {inputs:[], outputs:[]};
-        // Merge inputs (no duplicates)
-        ioData[id].inputs.forEach(item => {
-          if(!EXTERNAL_IO[id].inputs.includes(item)){
-            EXTERNAL_IO[id].inputs.push(item);
-            added++;
-          }
-        });
-        // Merge outputs (no duplicates)
-        ioData[id].outputs.forEach(item => {
-          if(!EXTERNAL_IO[id].outputs.includes(item)){
-            EXTERNAL_IO[id].outputs.push(item);
-            added++;
-          }
-        });
-      }
-      saveExternalIO();
-      render();
-      showStatus(`✅ Imported! ${added} new items merged.`, '#60a5fa');
-    } catch(err){
-      showStatus('❌ Import failed: ' + err.message, '#ff6b6b');
-    }
-  };
-  reader.readAsText(file);
-  // Reset file input so the same file can be re-imported
-  event.target.value = '';
-}
-
-function exportFullHTML(){
-  // Build a new version of EXTERNAL_IO_DEFAULTS with current data baked in
-  let ioBlock = 'const EXTERNAL_IO_DEFAULTS = {\n';
-  const ids = Object.keys(EXTERNAL_IO).sort((a,b)=>Number(a)-Number(b));
-  ids.forEach((id, idx) => {
-    const d = EXTERNAL_IO[id];
-    const inStr = d.inputs.map(i => JSON.stringify(i)).join(',');
-    const outStr = d.outputs.map(o => JSON.stringify(o)).join(',');
-    const pad = Number(id) < 10 ? ' ' : '';
-    ioBlock += `  ${pad}${id}: { inputs: [${inStr}],\n        outputs: [${outStr}] }`;
-    ioBlock += idx < ids.length - 1 ? ',\n' : '\n';
-  });
-  ioBlock += '};';
-
-  // Get current page HTML
-  let html = document.documentElement.outerHTML;
-
-  // Replace the EXTERNAL_IO_DEFAULTS block
-  const startMarker = 'const EXTERNAL_IO_DEFAULTS = {';
-  const endMarker = /const EXTERNAL_IO_DEFAULTS = \{[\s\S]*?\n\};/;
-  html = html.replace(endMarker, ioBlock);
-
-  // Wrap in proper doctype
-  html = '<!DOCTYPE html>\n<html' + html.substring(html.indexOf('<html') + 5);
-
-  const blob = new Blob([html], {type: 'text/html'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'pmp-ramdayal-process-map.html';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showStatus('✅ Full HTML exported — commit to Git!', '#ffd700');
-}
-
 render();
 </script>
 </body>
